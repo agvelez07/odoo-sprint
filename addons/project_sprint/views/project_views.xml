@@ -1,0 +1,15 @@
+<odoo>
+    <record id="project_project_form_sprint" model="ir.ui.view">
+        <field name="name">project.project.form.sprint</field>
+        <field name="model">project.project</field>
+        <field name="inherit_id" ref="project.edit_project"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_view_sprints" type="object"
+                        class="oe_stat_button" icon="fa-repeat">
+                    <field name="sprint_count" widget="statinfo" string="Sprints"/>
+                </button>
+            </xpath>
+        </field>
+    </record>
+</odoo>

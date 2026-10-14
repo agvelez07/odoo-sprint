@@ -5,11 +5,12 @@
         <field name="model">project.task</field>
         <field name="inherit_id" ref="project.view_task_form2"/>
         <field name="arch" type="xml">
-            <xpath expr="(//field[@name='project_id'])[1]" position="after">
+            <xpath expr="//group/group/field[@name='tag_ids']" position="after">
                 <field name="sprint_ids" widget="many2many_tags"
+                       invisible="not project_id"
                        domain="[('project_id', '=', project_id), ('state', '!=', 'closed')]"/>
-                <field name="current_sprint_id"/>
-                <field name="effort_points"/>
+                <field name="current_sprint_id" invisible="not project_id"/>
+                <field name="effort_points" invisible="not project_id"/>
             </xpath>
         </field>
     </record>

@@ -5,9 +5,22 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="3a101161-1210-41e9-9df6-b5f617ed33cb" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/__manifest__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/__manifest__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/addons/project_sprint/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/addons/project_sprint/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/addons/project_sprint/__manifest__.py" beforeDir="false" afterPath="$PROJECT_DIR$/addons/project_sprint/__manifest__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/addons/project_sprint/models/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/addons/project_sprint/models/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/addons/project_sprint/views/sprint_views.xml" beforeDir="false" afterPath="$PROJECT_DIR$/addons/project_sprint/views/sprint_views.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/addons/project_sprint/views/task_views.xml" beforeDir="false" afterPath="$PROJECT_DIR$/addons/project_sprint/views/task_views.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_sprint.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/views/sprint_views.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/views/task_views.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/wizard/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/wizard/sprint_close_wizard.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/wizard/sprint_close_wizard_views.xml" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -98,7 +111,7 @@
     "SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "codeWithMe.voiceChat.enabledByDefault": "false",
     "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
-    "git-widget-placeholder": "master",
+    "git-widget-placeholder": "main",
     "junie.onboarding.icon.badge.shown": "true",
     "last_opened_file_path": "C:/Users/antonio.velez/PycharmProjects/DSAS_UCSanDiego/PythonProject",
     "node.js.detected.package.eslint": "true",

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="project_task_view_form_sprint" model="ir.ui.view">
+        <field name="name">project.task.form.sprint</field>
+        <field name="model">project.task</field>
+        <field name="inherit_id" ref="project.view_task_form2"/>
+        <field name="arch" type="xml">
+            <xpath expr="(//field[@name='project_id'])[1]" position="after">
+                <field name="sprint_ids" widget="many2many_tags"
+                       domain="[('project_id', '=', project_id), ('state', '!=', 'closed')]"/>
+                <field name="current_sprint_id"/>
+                <field name="effort_points"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="project_task_view_search_sprint" model="ir.ui.view">
+        <field name="name">project.task.search.sprint</field>
+        <field name="model">project.task</field>
+        <field name="inherit_id" ref="project.view_task_search_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//search" position="inside">
+                <field name="sprint_ids"/>
+                <filter string="Backlog" name="backlog"
+                        domain="[('sprint_ids', '=', False)]"/>
+                <filter string="Sprint atual" name="group_current_sprint"
+                        context="{'group_by': 'current_sprint_id'}"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>
