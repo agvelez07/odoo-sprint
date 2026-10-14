@@ -1,4 +1,5 @@
-from odoo import api, fields, models
+from odoo import _, api, fields, models
+from odoo.exceptions import ValidationError
 
 
 class ProjectTask(models.Model):
@@ -17,3 +18,14 @@ class ProjectTask(models.Model):
         for task in self:
             task.current_sprint_id = task.sprint_ids.filtered(
                 lambda s: s.state == 'active')[:1]
+
+    @api.constrains('sprint_ids', 'project_id')
+    def _check_sprints_same_project(self):
+        for task in self:
+            wrong = task.sprint_ids.filtered(
+                lambda s: s.project_id != task.project_id)
+            if wrong:
+                raise ValidationError(_(
+                    'A tarefa "%(task)s" só pode estar em sprints do seu projeto (%(project)s).',
+                    task=task.name,
+                    project=task.project_id.display_name or _('sem projeto')))

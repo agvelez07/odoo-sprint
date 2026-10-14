@@ -5,6 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="3a101161-1210-41e9-9df6-b5f617ed33cb" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/__manifest__.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -14,6 +16,65 @@
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="NextEditCompletionFeaturesState">
+    <decayedCancelled>
+      <entry key="MS100" value="1.4918729337728678" />
+      <entry key="MS500" value="2.475369613125908" />
+      <entry key="S2" value="2.8513381022001747" />
+      <entry key="S5" value="2.9389706327682315" />
+      <entry key="S10" value="2.9692178725241787" />
+      <entry key="S30" value="2.9896792261659058" />
+      <entry key="S60" value="2.994832065089363" />
+      <entry key="M2" value="2.997414142539302" />
+      <entry key="M5" value="2.9989652030289555" />
+      <entry key="M10" value="2.99948252581787" />
+      <entry key="M15" value="2.9996550003880627" />
+      <entry key="M30" value="2.9998274917815104" />
+      <entry key="H1" value="2.9999137437875136" />
+      <entry key="H2" value="2.999956871367932" />
+      <entry key="H4" value="2.9999784355525083" />
+      <entry key="D1" value="2.9999964059071598" />
+      <entry key="W1" value="2.9999994865577184" />
+    </decayedCancelled>
+    <decayedSelected>
+      <entry key="MS100" value="0.0" />
+      <entry key="MS500" value="0.0" />
+      <entry key="S2" value="0.0" />
+      <entry key="S5" value="0.0" />
+      <entry key="S10" value="0.0" />
+      <entry key="S30" value="0.0" />
+      <entry key="S60" value="0.0" />
+      <entry key="M2" value="0.0" />
+      <entry key="M5" value="0.0" />
+      <entry key="M10" value="0.0" />
+      <entry key="M15" value="0.0" />
+      <entry key="M30" value="0.0" />
+      <entry key="H1" value="0.0" />
+      <entry key="H2" value="0.0" />
+      <entry key="H4" value="0.0" />
+      <entry key="D1" value="0.0" />
+      <entry key="W1" value="0.0" />
+    </decayedSelected>
+    <decayedShown>
+      <entry key="MS100" value="1.4663549577655377" />
+      <entry key="MS500" value="2.464671170183059" />
+      <entry key="S2" value="2.8480985671042047" />
+      <entry key="S5" value="2.937621551913149" />
+      <entry key="S10" value="2.968534116115791" />
+      <entry key="S30" value="2.989449227070708" />
+      <entry key="S60" value="2.994716803461908" />
+      <entry key="M2" value="2.997356446051424" />
+      <entry key="M5" value="2.9989421086522334" />
+      <entry key="M10" value="2.9994709759975975" />
+      <entry key="M15" value="2.9996472999228896" />
+      <entry key="M30" value="2.999823641256398" />
+      <entry key="H1" value="2.9999118184518196" />
+      <entry key="H2" value="2.9999559086818004" />
+      <entry key="H4" value="2.999977954204871" />
+      <entry key="D1" value="2.999996325681919" />
+      <entry key="W1" value="2.999999475096954" />
+    </decayedShown>
   </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 8,
@@ -27,25 +88,28 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;ASKED_SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
-    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/vitam/PycharmProjects/odoo-sprint/addons&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;python.packages.toolwindow.project.migrated.to.right.top.v2&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ASKED_SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "codeWithMe.voiceChat.enabledByDefault": "false",
+    "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
+    "git-widget-placeholder": "master",
+    "junie.onboarding.icon.badge.shown": "true",
+    "last_opened_file_path": "C:/Users/antonio.velez/PycharmProjects/DSAS_UCSanDiego/PythonProject",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "python.packages.toolwindow.project.migrated.to.right.top.v2": "true",
+    "to.speed.mode.migration.done": "true"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\vitam\PycharmProjects\odoo-sprint\addons" />
@@ -68,6 +132,7 @@
       <updated>1791981511860</updated>
       <workItem from="1791981512869" duration="1759000" />
       <workItem from="1791985747222" duration="2033000" />
+      <workItem from="1791992806353" duration="1873000" />
     </task>
     <servers />
   </component>
