@@ -24,7 +24,7 @@ services:
     volumes:
       - ./addons:/mnt/extra-addons
       - odoo-data:/var/lib/odoo
-    command: odoo --dev=reload,xml
+    command: odoo -d sprints -i project_sprint -u project_sprint --db-filter=^sprints$ --dev=reload,xml
 
 volumes:
   db-data:
