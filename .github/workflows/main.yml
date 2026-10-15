@@ -36,9 +36,9 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Obter Código-Fonte do Odoo (versão 17.0)
+      - name: Obter Código-Fonte do Odoo (versão 18.0)
         run: |
-          git clone --depth 1 --branch 17.0 https://github.com/odoo/odoo.git odoo_core
+          git clone --depth 1 --branch 18.0 https://github.com/odoo/odoo.git odoo_core
 
       - name: Instalar Dependências de Sistema
         run: |
@@ -51,16 +51,16 @@ jobs:
           pip install -r odoo_core/requirements.txt
 
       - name: Executar Testes Automáticos
-        env:
-          HOST: localhost
-          PORT: 5432
-          USER: odoo
-          PASSWORD: odoo_password
         run: |
           python odoo_core/odoo-bin \
-            --addons-path=odoo_core/addons,custom_addons \
+            --addons-path=odoo_core/addons,custom_addons/odoo-sprint/addons \
+            --db_host=localhost \
+            --db_port=5432 \
+            --db_user=odoo \
+            --db_password=odoo_password \
             -d test_db \
-            -i odoo-sprint \
+            -i project_sprint \
             --test-enable \
+            --test-tags=/project_sprint \
             --stop-after-init \
             --log-level=test
