@@ -1,5 +1,15 @@
-.o_form_view.o_sprint_form .o_form_sheet {
-    max-width: 100%;
-    margin-left: 0;
-    margin-right: 0;
+// Ocupar a largura toda nos formulários do módulo
+.o_sprint_form,
+.o_sprint_form .o_form_renderer {
+    max-width: none !important;
+}
+
+.o_sprint_form .o_form_sheet_bg {
+    max-width: none !important;
+    margin-right: 0 !important;
+}
+
+// Botão "remover do sprint" centrado na célula
+.o_sprint_form td.o_list_button {
+    text-align: center;
 }

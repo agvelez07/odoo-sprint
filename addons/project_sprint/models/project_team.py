@@ -63,6 +63,19 @@ class ProjectTeam(models.Model):
             team.sprint_active_count = len(active)
             team.sprint_overdue_count = len(active.filtered('is_overdue'))
 
+    def _sync_task_followers(self):
+        for team in self:
+            partners = (team.lead_id | team.member_ids.user_id).partner_id
+            tasks = self.env['project.task'].search(
+                [('project_id.team_id', '=', team.id)])
+            tasks.sudo().message_subscribe(partner_ids=partners.ids)
+
+    def write(self, vals):
+        res = super().write(vals)
+        if 'lead_id' in vals or 'member_ids' in vals:
+            self._sync_task_followers()
+        return res
+
     @api.onchange('lead_id')
     def _onchange_lead_id(self):
         self.member_ids = self.member_ids.filtered(
@@ -118,3 +131,11 @@ class ProjectTeamMember(models.Model):
                 return min(open_sprints.mapped('date_end') or [date.max])
 
             member.task_ids = tasks.sorted(key=end_date)
+
+    def unlink(self):
+        Task = self.env['project.task']
+        for member in self:
+            tasks = Task.search([('project_id.team_id', '=', member.team_id.id)])
+            tasks.sudo().message_unsubscribe(
+                partner_ids=member.user_id.partner_id.ids)
+        return super().unlink()

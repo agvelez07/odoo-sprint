@@ -9,13 +9,14 @@ CLOSED_STATES = ('1_done', '1_canceled')
 
 class ProjectSprint(models.Model):
     _name = 'project.sprint'
+    _inherit = ['project.deadline.mixin']
     _description = 'Project Sprint'
-    _order = 'date_start desc, id desc'
-    team_id = fields.Many2one(related='project_id.team_id', store=True, index=True)
+    _order = 'project_id, date_end'
 
     name = fields.Char(required=True, default='New', copy=False)
     project_id = fields.Many2one(
         'project.project', required=True, index=True, ondelete='restrict')
+    team_id = fields.Many2one(related='project_id.team_id', store=True, index=True)
     date_start = fields.Date(
         required=True, default=fields.Date.context_today)
     date_end = fields.Date(
@@ -36,6 +37,8 @@ class ProjectSprint(models.Model):
     done_points = fields.Integer(compute='_compute_progress', store=True)
     progress = fields.Float(compute='_compute_progress', store=True)
     is_overdue = fields.Boolean(compute='_compute_is_overdue')
+
+    # days_overdue e deadline_status vêm do project.deadline.mixin
 
     # ------------------------------------------------------------------
     # Campos calculados
@@ -63,6 +66,22 @@ class ProjectSprint(models.Model):
         for sprint in self:
             sprint.is_overdue = bool(
                 sprint.state == 'active' and sprint.date_end and sprint.date_end < today)
+
+    @api.depends('state', 'date_start', 'date_end')
+    def _compute_deadline(self):
+        super()._compute_deadline()
+
+    def _deadline_info(self):
+        self.ensure_one()
+        today = fields.Date.context_today(self)
+        if self.state == 'closed':
+            return None, 'Fechado'
+        if self.state == 'planned':
+            delta = (self.date_start - today).days if self.date_start else 0
+            return None, (f'Começa em {delta} d' if delta > 0 else 'Por iniciar')
+        if not self.date_end:
+            return None, 'Sem prazo'
+        return self.date_end, False
 
     # ------------------------------------------------------------------
     # Validacoes

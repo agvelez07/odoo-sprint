@@ -19,3 +19,9 @@ class ProjectProject(models.Model):
         action['domain'] = [('project_id', '=', self.id)]
         action['context'] = {'default_project_id': self.id}
         return action
+
+    def write(self, vals):
+        res = super().write(vals)
+        if 'team_id' in vals:
+            self.team_id._sync_task_followers()
+        return res
