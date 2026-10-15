@@ -139,7 +139,7 @@
                             <field name="task_ids"
                                    domain="[('project_id', '=', project_id)]"
                                    context="{'sprint_id': id}"
-                                   options="{'unlink': false}"
+                                   options="{'unlink': false, 'no_create': true}"
                                    readonly="state == 'closed'">
                                 <list decoration-danger="days_overdue > 0">
                                     <field name="name"/>

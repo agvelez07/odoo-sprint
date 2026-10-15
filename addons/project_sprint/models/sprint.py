@@ -1,6 +1,6 @@
 from datetime import timedelta
 
-from odoo import _, api, fields, models
+from odoo import Command, _, api, fields, models
 from odoo.exceptions import UserError, ValidationError
 
 # Estados de tarefa que o Odoo considera fechados (project.task.CLOSED_STATES)
@@ -121,6 +121,16 @@ class ProjectSprint(models.Model):
     # ------------------------------------------------------------------
     # Validacoes
     # ------------------------------------------------------------------
+    @api.onchange('project_id')
+    def _onchange_project_id(self):
+        """Ao mudar de projeto, sai tudo o que era do projeto antigo
+        (tarefas e milestone), em vez de dar erro ao guardar."""
+        for sprint in self:
+            sprint.task_ids = sprint.task_ids.filtered(
+                lambda t: t.project_id == sprint.project_id)
+            if sprint.milestone_id.project_id != sprint.project_id:
+                sprint.milestone_id = False
+
     @api.constrains('date_start', 'date_end')
     def _check_dates(self):
         for sprint in self:
@@ -188,6 +198,8 @@ class ProjectSprint(models.Model):
 
     def write(self, vals):
         tasks_before = {s.id: s.task_ids for s in self} if 'task_ids' in vals else {}
+        if 'project_id' in vals:
+            self._drop_links_of_other_projects(vals['project_id'], vals)
         res = super().write(vals)
         if 'project_id' in vals:
             self._subscribe_team()
@@ -202,6 +214,21 @@ class ProjectSprint(models.Model):
             if parts:
                 sprint._notify_team(' '.join(parts))
         return res
+
+    def _drop_links_of_other_projects(self, project_id, vals):
+        """Mudar o projeto do sprint (por qualquer via: formulário, lista,
+        importação) tira-lhe as tarefas e o milestone do projeto antigo,
+        em vez de dar erro ao guardar."""
+        for sprint in self:
+            clean = {}
+            stale = sprint.task_ids.filtered(lambda t: t.project_id.id != project_id)
+            if stale and 'task_ids' not in vals:
+                clean['task_ids'] = [Command.unlink(t.id) for t in stale]
+            if (sprint.milestone_id and sprint.milestone_id.project_id.id != project_id
+                    and 'milestone_id' not in vals):
+                clean['milestone_id'] = False
+            if clean:
+                super(ProjectSprint, sprint).write(clean)
 
     # ------------------------------------------------------------------
     # Acoes

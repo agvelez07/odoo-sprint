@@ -1,4 +1,6 @@
-from odoo import Command
+from datetime import timedelta
+
+from odoo import Command, fields
 from odoo.exceptions import ValidationError
 from odoo.tests.common import TransactionCase, tagged
 
@@ -89,3 +91,59 @@ class TestProjectSprint(TransactionCase):
         self.assertIn(self.task_a, following.task_ids)
         # mantem o historico no sprint fechado
         self.assertIn(self.task_a, sprint.task_ids)
+
+
+@tagged('post_install', '-at_install')
+class TestProjectChangeOnchange(TransactionCase):
+    """Mudar de projeto limpa as ligações do projeto antigo em vez de dar erro."""
+
+    def test_task_leaves_sprints_when_project_changes(self):
+        from odoo.tests import Form
+        today = fields.Date.context_today(self.env['project.sprint'])
+        p1 = self.env['project.project'].create({'name': 'P1'})
+        p2 = self.env['project.project'].create({'name': 'P2'})
+        task = self.env['project.task'].create({'name': 'T', 'project_id': p1.id})
+        sprint = self.env['project.sprint'].create({
+            'project_id': p1.id, 'date_start': today,
+            'date_end': today + timedelta(days=7), 'task_ids': [Command.set(task.ids)]})
+        with Form(task) as form:
+            form.project_id = p2
+        self.assertFalse(task.sprint_ids)
+        self.assertNotIn(task, sprint.task_ids)
+
+    def test_sprint_drops_tasks_and_milestone_when_project_changes(self):
+        from odoo.tests import Form
+        today = fields.Date.context_today(self.env['project.sprint'])
+        p1 = self.env['project.project'].create({'name': 'P1'})
+        p2 = self.env['project.project'].create({'name': 'P2'})
+        task = self.env['project.task'].create({'name': 'T', 'project_id': p1.id})
+        milestone = self.env['project.milestone'].create({'name': 'M', 'project_id': p1.id})
+        sprint = self.env['project.sprint'].create({
+            'project_id': p1.id, 'date_start': today, 'milestone_id': milestone.id,
+            'date_end': today + timedelta(days=7), 'task_ids': [Command.set(task.ids)]})
+        with Form(sprint) as form:
+            form.project_id = p2
+        self.assertFalse(sprint.task_ids)
+        self.assertFalse(sprint.milestone_id)
+
+
+@tagged('post_install', '-at_install')
+class TestProjectChangeWrite(TransactionCase):
+    """Mudar o projeto por escrita direta (lista, importação) também limpa as ligações."""
+
+    def test_write_project_on_task_and_sprint(self):
+        today = fields.Date.context_today(self.env['project.sprint'])
+        p1 = self.env['project.project'].create({'name': 'P1'})
+        p2 = self.env['project.project'].create({'name': 'P2'})
+        task = self.env['project.task'].create({'name': 'T', 'project_id': p1.id})
+        milestone = self.env['project.milestone'].create({'name': 'M', 'project_id': p1.id})
+        sprint = self.env['project.sprint'].create({
+            'project_id': p1.id, 'date_start': today, 'milestone_id': milestone.id,
+            'date_end': today + timedelta(days=7), 'task_ids': [Command.set(task.ids)]})
+        task.write({'project_id': p2.id})
+        self.assertFalse(task.sprint_ids)
+        task.write({'project_id': p1.id})
+        sprint.write({'task_ids': [Command.link(task.id)]})
+        sprint.write({'project_id': p2.id})
+        self.assertFalse(sprint.task_ids)
+        self.assertFalse(sprint.milestone_id)

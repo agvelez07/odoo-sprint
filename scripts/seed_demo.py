@@ -24,17 +24,20 @@ def seed(env):
 
     group_user = env.ref('project.group_project_user')
     group_lead = env.ref('project_sprint.group_team_lead')
+    group_manager = env.ref('project.group_project_manager')
 
     def role(xmlid):
         return env.ref('project_sprint.' + xmlid)
 
-    def make_user(name, login, lead=False):
+    def make_user(name, login, lead=False, manager=False):
         user = env['res.users'].search([('login', '=', login)], limit=1)
         if user:
             return user
         groups = [Command.link(group_user.id)]
         if lead:
             groups.append(Command.link(group_lead.id))
+        if manager:
+            groups.append(Command.link(group_manager.id))
         return env['res.users'].create({
             'name': name, 'login': login, 'email': login, 'groups_id': groups,
             'password': demo_password,
@@ -43,6 +46,8 @@ def seed(env):
         })
 
     # ---------- Utilizadores ----------
+    # gestor de projeto: vê e edita tudo, em todas as equipas
+    make_user('Marta Gestora', 'gestor@demo.local', manager=True)
     ana = make_user('Ana Costa', 'ana.costa@demo.local', lead=True)
     bruno = make_user('Bruno Silva', 'bruno.silva@demo.local')
     carla = make_user('Carla Mendes', 'carla.mendes@demo.local')
@@ -206,7 +211,8 @@ def seed(env):
         ('Custos cloud', 3, 'todo', None, [], None),
     ])
 
-    print('Demo criada: 3 equipas, 5 projetos, 9 sprints, 8 milestones, 42 tarefas, 11 utilizadores.')
+    print('Demo criada: 3 equipas, 5 projetos, 9 sprints, 8 milestones, 42 tarefas, 12 utilizadores.')
+    print('Gestor: gestor@demo.local.')
     print('Líderes: ana.costa / eduardo.faria / ines.moreira (@demo.local).')
     print('Engenheiros: bruno.silva, carla.mendes, diogo.ramos, ... (@demo.local).')
     print('Palavra-passe de todos os utilizadores de demo: ver README (secção "Utilizadores de demonstração").')
