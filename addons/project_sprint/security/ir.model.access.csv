@@ -8,9 +8,6 @@ access_project_team_manager,project.team manager,model_project_team,project.grou
 access_project_team_member_user,project.team.member user,model_project_team_member,project.group_project_user,1,0,0,0
 access_project_team_member_lead,project.team.member lead,model_project_team_member,project_sprint.group_team_lead,1,1,1,1
 access_project_team_member_manager,project.team.member manager,model_project_team_member,project.group_project_manager,1,1,1,1
-access_project_team_member_user,project.team.member user,model_project_team_member,project.group_project_user,1,0,0,0
-access_project_team_member_lead,project.team.member lead,model_project_team_member,project_sprint.group_team_lead,1,1,1,1
-access_project_team_member_manager,project.team.member manager,model_project_team_member,project.group_project_manager,1,1,1,1
 access_project_team_role_user,project.team.role user,model_project_team_role,project.group_project_user,1,0,0,0
 access_project_team_role_lead,project.team.role lead,model_project_team_role,project_sprint.group_team_lead,1,1,1,0
 access_project_team_role_manager,project.team.role manager,model_project_team_role,project.group_project_manager,1,1,1,1

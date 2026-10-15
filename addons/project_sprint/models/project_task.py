@@ -3,15 +3,15 @@ from odoo.exceptions import ValidationError, UserError
 
 
 class ProjectTask(models.Model):
-    _inherit = 'project.task'
+    _inherit = ['project.task', 'project.deadline.mixin']
 
     sprint_ids = fields.Many2many(
         'project.sprint', 'project_sprint_task_rel', 'task_id', 'sprint_id',
         string='Sprints')
     current_sprint_id = fields.Many2one(
         'project.sprint', compute='_compute_current_sprint',
-        store=True, index=True, string='Sprint atual')
-    effort_points = fields.Integer(string='Pontos de esforço')
+        store=True, index=True, string='Sprint atual', tracking=True)
+    effort_points = fields.Integer(string='Pontos de esforço', tracking=True)
     team_id = fields.Many2one(related='project_id.team_id', string='Equipa', readonly=True)
     team_members_text = fields.Text(compute='_compute_team_members_text',
                                     string='Membros da equipa')
@@ -54,3 +54,40 @@ class ProjectTask(models.Model):
         if sprint.state == 'closed':
             raise UserError('Não é possível alterar um sprint fechado.')
         sprint.write({'task_ids': [Command.unlink(task.id) for task in self]})
+
+    @api.depends('date_deadline', 'state')
+    def _compute_deadline(self):
+        super()._compute_deadline()
+
+    def _deadline_info(self):
+        self.ensure_one()
+        if self.state == '1_done':
+            return None, 'Concluída'
+        if self.state == '1_canceled':
+            return None, 'Cancelada'
+        deadline = fields.Date.to_date(self.date_deadline)
+        if not deadline:
+            return None, 'Sem prazo'
+        return deadline, False
+
+    # ------------------------------------------------------------------
+    # Notificações: a equipa segue as tarefas dos seus projetos
+    # ------------------------------------------------------------------
+    def _subscribe_team(self):
+        for task in self:
+            team = task.project_id.team_id
+            if team:
+                partners = (team.lead_id | team.member_ids.user_id).partner_id
+                task.sudo().message_subscribe(partner_ids=partners.ids)
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        tasks = super().create(vals_list)
+        tasks._subscribe_team()
+        return tasks
+
+    def write(self, vals):
+        res = super().write(vals)
+        if 'project_id' in vals:
+            self._subscribe_team()
+        return res

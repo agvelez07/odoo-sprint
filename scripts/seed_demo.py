@@ -62,7 +62,7 @@ def seed(env):
     # ---------- Projetos ----------
     stages = env['project.task.type'].create([
         {'name': name, 'sequence': i}
-        for i, name in enumerate(['A fazer', 'Em curso', 'Feito'])])
+        for i, name in enumerate(['Por Fazer', 'Em curso', 'Feito'])])
 
     def make_project(name, team):
         return env['project.project'].create({
