@@ -23,7 +23,7 @@
         <field name="name">project.sprint.form</field>
         <field name="model">project.sprint</field>
         <field name="arch" type="xml">
-            <form>
+            <form class="o_sprint_form">
                 <header>
                     <button name="action_start" type="object" string="Iniciar sprint"
                             class="btn-primary" invisible="state != 'planned'"/>

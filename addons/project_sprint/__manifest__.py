@@ -5,12 +5,19 @@
     'summary': 'Organise project tasks into sprints',
     'depends': ['project'],
     'data': [
+        'security/security.xml',
         'security/ir.model.access.csv',
         'views/sprint_views.xml',
         'views/task_views.xml',
         'views/project_views.xml',
+        'views/team_views.xml',
         'wizard/sprint_close_wizard_views.xml',
     ],
+    'assets': {
+        'web.assets_backend': [
+            'project_sprint/static/src/scss/sprint.scss',
+        ],
+    },
     'license': 'LGPL-3',
     'installable': True,
     'application': False,

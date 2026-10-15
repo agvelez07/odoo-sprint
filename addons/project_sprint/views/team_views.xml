@@ -1,0 +1,51 @@
+<odoo>
+    <record id="project_team_view_list" model="ir.ui.view">
+        <field name="name">project.team.list</field>
+        <field name="model">project.team</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="lead_id"/>
+                <field name="member_count"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="project_team_view_form" model="ir.ui.view">
+        <field name="name">project.team.form</field>
+        <field name="model">project.team</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <field name="lead_id"/>
+                    </group>
+                    <notebook>
+                        <page string="Membros">
+                            <field name="member_ids">
+                                <list editable="bottom">
+                                    <field name="user_id"/>
+                                    <field name="role"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Projetos">
+                            <field name="project_ids" readonly="1"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="project_team_action" model="ir.actions.act_window">
+        <field name="name">Equipas</field>
+        <field name="res_model">project.team</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <menuitem id="project_team_menu" name="Equipas"
+              parent="project.menu_main_pm" action="project_team_action"
+              sequence="16"/>
+</odoo>

@@ -1,3 +1,10 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_project_sprint_user,project.sprint user,model_project_sprint,project.group_project_user,1,0,0,0
+access_project_sprint_lead,project.sprint lead,model_project_sprint,project_sprint.group_team_lead,1,1,1,0
 access_project_sprint_manager,project.sprint manager,model_project_sprint,project.group_project_manager,1,1,1,1
+access_project_team_user,project.team user,model_project_team,project.group_project_user,1,0,0,0
+access_project_team_lead,project.team lead,model_project_team,project_sprint.group_team_lead,1,1,0,0
+access_project_team_manager,project.team manager,model_project_team,project.group_project_manager,1,1,1,1
+access_project_team_member_user,project.team.member user,model_project_team_member,project.group_project_user,1,0,0,0
+access_project_team_member_lead,project.team.member lead,model_project_team_member,project_sprint.group_team_lead,1,1,1,1
+access_project_team_member_manager,project.team.member manager,model_project_team_member,project.group_project_manager,1,1,1,1
