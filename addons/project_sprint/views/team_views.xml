@@ -11,7 +11,7 @@
         </field>
     </record>
 
-    <record id="project_team_view_form" model="ir.ui.view">
+        <record id="project_team_view_form" model="ir.ui.view">
         <field name="name">project.team.form</field>
         <field name="model">project.team</field>
         <field name="arch" type="xml">
@@ -19,17 +19,15 @@
                 <sheet>
                     <group>
                         <field name="name"/>
-                        <field name="lead_id"/>
+                        <field name="lead_id" options="{'no_create': True}"/>
+                    </group>
+                    <group string="Engenheiros">
+                        <field name="member_ids" nolabel="1"
+                               widget="many2many_tags_avatar"
+                               domain="[('id', '!=', lead_id), ('share', '=', False)]"
+                               options="{'no_create': True}"/>
                     </group>
                     <notebook>
-                        <page string="Membros">
-                            <field name="member_ids">
-                                <list editable="bottom">
-                                    <field name="user_id"/>
-                                    <field name="role"/>
-                                </list>
-                            </field>
-                        </page>
                         <page string="Projetos">
                             <field name="project_ids" readonly="1"/>
                         </page>
