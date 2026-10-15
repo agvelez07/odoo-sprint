@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Milestones por projeto. As vistas "_readonly" são as que os engenheiros
+         recebem (ver Milestone.action_open_milestones); no servidor, só o líder
+         da equipa ou um gestor consegue gravar (regra rule_milestone_edit). -->
+    <record id="project_sprint_milestone_view_list" model="ir.ui.view">
+        <field name="name">project.sprint.milestone.list</field>
+        <field name="model">project.milestone</field>
+        <field name="arch" type="xml">
+            <list decoration-danger="is_deadline_exceeded" decoration-success="is_reached">
+                <field name="name"/>
+                <field name="project_id"/>
+                <field name="deadline"/>
+                <field name="sprint_ids" widget="many2many_tags"/>
+                <field name="is_reached"/>
+                <field name="is_deadline_exceeded" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="project_sprint_milestone_view_list_readonly" model="ir.ui.view">
+        <field name="name">project.sprint.milestone.list.readonly</field>
+        <field name="model">project.milestone</field>
+        <field name="mode">primary</field>
+        <field name="inherit_id" ref="project_sprint_milestone_view_list"/>
+        <field name="arch" type="xml">
+            <xpath expr="//list" position="attributes">
+                <attribute name="create">false</attribute>
+                <attribute name="edit">false</attribute>
+                <attribute name="delete">false</attribute>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="project_sprint_milestone_view_form" model="ir.ui.view">
+        <field name="name">project.sprint.milestone.form</field>
+        <field name="model">project.milestone</field>
+        <field name="arch" type="xml">
+            <form class="o_sprint_form">
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" placeholder="Nome do milestone"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="project_id" options="{'no_create': True}"/>
+                            <field name="deadline"/>
+                        </group>
+                        <group>
+                            <field name="is_reached"/>
+                            <field name="reached_date" invisible="not is_reached"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Sprints">
+                            <field name="sprint_ids" readonly="1">
+                                <list decoration-danger="is_overdue">
+                                    <field name="name"/>
+                                    <field name="date_end"/>
+                                    <field name="deadline_status" string="Prazo"/>
+                                    <field name="milestone_at_risk" string="Em risco"/>
+                                    <field name="state" widget="badge"
+                                           decoration-info="state == 'planned'"
+                                           decoration-success="state == 'active'"/>
+                                    <field name="is_overdue" column_invisible="1"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Tarefas">
+                            <field name="task_ids" readonly="1">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="user_ids" widget="many2many_avatar_user"/>
+                                    <field name="stage_id"/>
+                                    <field name="date_deadline" string="Prazo"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="project_sprint_milestone_view_form_readonly" model="ir.ui.view">
+        <field name="name">project.sprint.milestone.form.readonly</field>
+        <field name="model">project.milestone</field>
+        <field name="mode">primary</field>
+        <field name="inherit_id" ref="project_sprint_milestone_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="attributes">
+                <attribute name="create">false</attribute>
+                <attribute name="edit">false</attribute>
+                <attribute name="delete">false</attribute>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="project_sprint_milestone_view_search" model="ir.ui.view">
+        <field name="name">project.sprint.milestone.search</field>
+        <field name="model">project.milestone</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="project_id"/>
+                <filter name="pending" string="Por atingir" domain="[('is_reached', '=', False)]"/>
+                <filter name="reached" string="Atingidos" domain="[('is_reached', '=', True)]"/>
+                <group expand="0" string="Agrupar por">
+                    <filter name="group_project" string="Projeto"
+                            context="{'group_by': 'project_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="project_sprint_milestone_action" model="ir.actions.act_window">
+        <field name="name">Milestones</field>
+        <field name="res_model">project.milestone</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="project_sprint_milestone_view_search"/>
+        <field name="context">{'search_default_pending': 1}</field>
+    </record>
+
+    <record id="project_sprint_milestone_server_action" model="ir.actions.server">
+        <field name="name">Milestones</field>
+        <field name="model_id" ref="project.model_project_milestone"/>
+        <field name="groups_id" eval="[(4, ref('project.group_project_user'))]"/>
+        <field name="state">code</field>
+        <field name="code">action = model.action_open_milestones()</field>
+    </record>
+
+    <menuitem id="project_sprint_milestone_menu" name="Milestones"
+              parent="project_sprint_root_menu"
+              action="project_sprint_milestone_server_action" sequence="15"/>
+</odoo>

@@ -1,8 +1,17 @@
 def seed(env):
+    import os
     from datetime import date, timedelta
     from odoo import Command
 
-    env = env(context=dict(env.context, tracking_disable=True, no_reset_password=True))
+    # Palavra-passe dos utilizadores de demonstração (só para ambiente local).
+    # Para usar outra: docker compose exec -T -e DEMO_PASSWORD=... odoo odoo shell ...
+    demo_password = os.environ.get('DEMO_PASSWORD', 'demo')
+
+    # Sem mensagens nem emails durante a criação dos dados: a caixa de entrada
+    # fica limpa para mostrar as notificações reais na demo.
+    env = env(context=dict(
+        env.context, tracking_disable=True, no_reset_password=True,
+        mail_auto_subscribe_no_notify=True, mail_create_nosubscribe=False))
     today = date.today()
 
     def day(n):
@@ -28,6 +37,9 @@ def seed(env):
             groups.append(Command.link(group_lead.id))
         return env['res.users'].create({
             'name': name, 'login': login, 'email': login, 'groups_id': groups,
+            'password': demo_password,
+            # notificações na caixa de entrada do Odoo (sem precisar de servidor de email)
+            'notification_type': 'inbox',
         })
 
     # ---------- Utilizadores ----------
@@ -66,7 +78,8 @@ def seed(env):
 
     def make_project(name, team):
         return env['project.project'].create({
-            'name': name, 'team_id': team.id, 'type_ids': [Command.set(stages.ids)]})
+            'name': name, 'team_id': team.id, 'allow_milestones': True,
+            'type_ids': [Command.set(stages.ids)]})
 
     pagamentos = make_project('Plataforma de Pagamentos', backend)
     gateway = make_project('API Gateway', backend)
@@ -78,10 +91,18 @@ def seed(env):
     Sprint = env['project.sprint']
     Task = env['project.task']
 
-    def make_sprint(project, name, start, end, state, goal):
+    Milestone = env['project.milestone']
+
+    def make_milestone(project, name, deadline, reached=False):
+        return Milestone.create({
+            'name': name, 'project_id': project.id,
+            'deadline': day(deadline), 'is_reached': reached})
+
+    def make_sprint(project, name, start, end, state, goal, milestone=None):
         return Sprint.create({
             'name': name, 'project_id': project.id, 'goal': goal,
-            'date_start': day(start), 'date_end': day(end), 'state': state})
+            'date_start': day(start), 'date_end': day(end), 'state': state,
+            'milestone_id': milestone.id if milestone else False})
 
     status_map = {
         'todo': (0, '01_in_progress'),
@@ -106,9 +127,12 @@ def seed(env):
             })
 
     # Plataforma de Pagamentos
-    p1 = make_sprint(pagamentos, 'Sprint 1', -28, -15, 'closed', 'Fundações do módulo de pagamentos')
-    p2 = make_sprint(pagamentos, 'Sprint 2', -10, 4, 'active', 'Reembolsos e auditoria')
-    p3 = make_sprint(pagamentos, 'Sprint 3', 5, 19, 'planned', 'MB Way e contabilidade')
+    ms_fund = make_milestone(pagamentos, 'Fundações concluídas', -14, reached=True)
+    ms_mvp = make_milestone(pagamentos, 'MVP de pagamentos', 6)
+    ms_golive = make_milestone(pagamentos, 'Go-live MB Way', 25)
+    p1 = make_sprint(pagamentos, 'Sprint 1', -28, -15, 'closed', 'Fundações do módulo de pagamentos', ms_fund)
+    p2 = make_sprint(pagamentos, 'Sprint 2', -10, 4, 'active', 'Reembolsos e auditoria', ms_mvp)
+    p3 = make_sprint(pagamentos, 'Sprint 3', 5, 19, 'planned', 'MB Way e contabilidade', ms_golive)
     make_tasks(pagamentos, [
         ('Modelar entidades de pagamento', 5, 'done', bruno, [p1], -18),
         ('Integrar gateway Multibanco', 8, 'done', carla, [p1], -16),
@@ -127,7 +151,9 @@ def seed(env):
     ])
 
     # API Gateway (sprint em atraso)
-    g1 = make_sprint(gateway, 'Sprint 1', -20, -3, 'active', 'Gateway mínimo viável')
+    # o milestone venceu antes do fim do sprint: aparece "em risco"
+    ms_beta = make_milestone(gateway, 'Gateway beta', -5)
+    g1 = make_sprint(gateway, 'Sprint 1', -20, -3, 'active', 'Gateway mínimo viável', ms_beta)
     make_tasks(gateway, [
         ('Autenticação OAuth2', 8, 'done', bruno, [g1], -8),
         ('Roteamento dinâmico', 8, 'doing', carla, [g1], -3),
@@ -138,8 +164,9 @@ def seed(env):
     ])
 
     # Portal do Cliente
-    c1 = make_sprint(portal, 'Sprint 1', -24, -11, 'closed', 'Base do portal')
-    c2 = make_sprint(portal, 'Sprint 2', -10, 9, 'active', 'Faturas e perfil')
+    ms_portal = make_milestone(portal, 'Portal v1', 12)
+    c1 = make_sprint(portal, 'Sprint 1', -24, -11, 'closed', 'Base do portal', ms_portal)
+    c2 = make_sprint(portal, 'Sprint 2', -10, 9, 'active', 'Faturas e perfil', ms_portal)
     make_tasks(portal, [
         ('Layout base responsivo', 5, 'done', filipa, [c1], -14),
         ('Página de login', 3, 'done', goncalo, [c1], -12),
@@ -154,7 +181,8 @@ def seed(env):
     ])
 
     # App Mobile
-    m1 = make_sprint(mobile, 'Sprint 1', 3, 17, 'planned', 'Protótipo navegável')
+    ms_proto = make_milestone(mobile, 'Protótipo aprovado', 20)
+    m1 = make_sprint(mobile, 'Sprint 1', 3, 17, 'planned', 'Protótipo navegável', ms_proto)
     make_tasks(mobile, [
         ('Protótipo de navegação', 5, 'todo', None, [m1], 10),
         ('Autenticação biométrica', 8, 'todo', None, [m1], 14),
@@ -163,8 +191,10 @@ def seed(env):
     ])
 
     # Infraestrutura Cloud
-    i1 = make_sprint(cloud, 'Sprint 1', -12, 2, 'active', 'Pipeline e monitorização')
-    i2 = make_sprint(cloud, 'Sprint 2', 3, 17, 'planned', 'Resiliência')
+    ms_pipe = make_milestone(cloud, 'Pipeline em produção', 1)   # em risco: o sprint acaba depois
+    ms_res = make_milestone(cloud, 'Resiliência validada', 20)
+    i1 = make_sprint(cloud, 'Sprint 1', -12, 2, 'active', 'Pipeline e monitorização', ms_pipe)
+    i2 = make_sprint(cloud, 'Sprint 2', 3, 17, 'planned', 'Resiliência', ms_res)
     make_tasks(cloud, [
         ('Pipeline CI/CD', 8, 'done', joao, [i1], -6),
         ('Terraform da rede', 5, 'done', katia, [i1], -4),
@@ -176,7 +206,10 @@ def seed(env):
         ('Custos cloud', 3, 'todo', None, [], None),
     ])
 
-    print('Demo criada: 3 equipas, 5 projetos, 8 sprints, 11 utilizadores.')
+    print('Demo criada: 3 equipas, 5 projetos, 9 sprints, 8 milestones, 42 tarefas, 11 utilizadores.')
+    print('Líderes: ana.costa / eduardo.faria / ines.moreira (@demo.local).')
+    print('Engenheiros: bruno.silva, carla.mendes, diogo.ramos, ... (@demo.local).')
+    print('Palavra-passe de todos os utilizadores de demo: ver README (secção "Utilizadores de demonstração").')
 
 
 seed(env)

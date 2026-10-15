@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Tipo de mensagem "Atualização da equipa": é com ele que o líder e os
+         membros são avisados de tudo o que muda em algo que é da equipa.
+         Cada pessoa pode desligá-lo no botão "Seguidores" de cada registo. -->
+    <record id="mt_team_update_project_task" model="mail.message.subtype">
+        <field name="name">Atualização da equipa</field>
+        <field name="res_model">project.task</field>
+        <field name="description">Alteração numa tarefa da equipa</field>
+        <field name="internal" eval="True"/>
+        <field name="default" eval="False"/>
+        <field name="sequence">5</field>
+    </record>
+    <record id="mt_team_update_project_sprint" model="mail.message.subtype">
+        <field name="name">Atualização da equipa</field>
+        <field name="res_model">project.sprint</field>
+        <field name="description">Alteração num sprint da equipa</field>
+        <field name="internal" eval="True"/>
+        <field name="default" eval="False"/>
+        <field name="sequence">5</field>
+    </record>
+    <record id="mt_team_update_project_project" model="mail.message.subtype">
+        <field name="name">Atualização da equipa</field>
+        <field name="res_model">project.project</field>
+        <field name="description">Alteração num projeto da equipa</field>
+        <field name="internal" eval="True"/>
+        <field name="default" eval="False"/>
+        <field name="sequence">5</field>
+    </record>
+    <record id="mt_team_update_project_milestone" model="mail.message.subtype">
+        <field name="name">Atualização da equipa</field>
+        <field name="res_model">project.milestone</field>
+        <field name="description">Alteração num milestone da equipa</field>
+        <field name="internal" eval="True"/>
+        <field name="default" eval="False"/>
+        <field name="sequence">5</field>
+    </record>
+    <record id="mt_team_update_project_team" model="mail.message.subtype">
+        <field name="name">Atualização da equipa</field>
+        <field name="res_model">project.team</field>
+        <field name="description">Alteração na equipa</field>
+        <field name="internal" eval="True"/>
+        <field name="default" eval="False"/>
+        <field name="sequence">5</field>
+    </record>
+</odoo>

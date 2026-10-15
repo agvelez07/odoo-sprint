@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="project_sprint_my_tasks_view_list" model="ir.ui.view">
+        <field name="name">project.sprint.my.tasks.list</field>
+        <field name="model">project.task</field>
+        <field name="arch" type="xml">
+            <list decoration-danger="days_overdue > 0" create="false"
+                  default_order="date_deadline asc, id">
+                <field name="name"/>
+                <field name="project_id"/>
+                <field name="sprint_ids" widget="many2many_tags"/>
+                <field name="stage_id"/>
+                <field name="effort_points" string="Pontos" sum="Total"/>
+                <field name="date_deadline" string="Prazo" options="{'show_time': false}"/>
+                <field name="deadline_status" string="Situação"/>
+                <field name="days_overdue" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="project_sprint_my_tasks_view_search" model="ir.ui.view">
+        <field name="name">project.sprint.my.tasks.search</field>
+        <field name="model">project.task</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="project_id"/>
+                <field name="sprint_ids"/>
+                <filter name="open" string="Por concluir"
+                        domain="[('state', 'not in', ['1_done', '1_canceled'])]"/>
+                <filter name="overdue" string="Em atraso"
+                        domain="[('date_deadline', '&lt;', context_today().strftime('%Y-%m-%d')), ('state', 'not in', ['1_done', '1_canceled'])]"/>
+                <group expand="0" string="Agrupar por">
+                    <filter name="group_sprint" string="Sprint atual"
+                            context="{'group_by': 'current_sprint_id'}"/>
+                    <filter name="group_project" string="Projeto"
+                            context="{'group_by': 'project_id'}"/>
+                    <filter name="group_stage" string="Etapa"
+                            context="{'group_by': 'stage_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="project_sprint_my_tasks_action" model="ir.actions.act_window">
+        <field name="name">As minhas tarefas</field>
+        <field name="res_model">project.task</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'list', 'view_id': ref('project_sprint_my_tasks_view_list')}),
+            (0, 0, {'view_mode': 'form'})]"/>
+        <field name="search_view_id" ref="project_sprint_my_tasks_view_search"/>
+        <field name="domain">[('user_ids', 'in', [uid]), ('sprint_ids.state', 'in', ['planned', 'active'])]</field>
+        <field name="context">{'search_default_open': 1}</field>
+    </record>
+
+    <menuitem id="project_sprint_my_tasks_menu" name="As minhas tarefas"
+              parent="project_sprint_root_menu"
+              action="project_sprint_my_tasks_action" sequence="5"/>
+</odoo>
