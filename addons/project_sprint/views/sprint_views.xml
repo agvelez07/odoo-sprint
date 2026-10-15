@@ -111,7 +111,11 @@
         <field name="view_mode">list,form</field>
     </record>
 
-    <menuitem id="project_sprint_menu" name="Sprints"
-              parent="project.menu_main_pm" action="project_sprint_action"
-              sequence="15"/>
+    <menuitem id="project_sprint_root_menu" name="Sprints"
+          web_icon="project_sprint,static/description/icon.png"
+          sequence="30"/>
+
+        <menuitem id="project_sprint_menu" name="Sprints"
+              parent="project_sprint_root_menu" action="project_sprint_action"
+              sequence="10"/>
 </odoo>

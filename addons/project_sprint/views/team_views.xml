@@ -46,6 +46,7 @@
     </record>
 
     <menuitem id="project_team_menu" name="Equipas"
-              parent="project.menu_main_pm" action="project_team_action"
-              sequence="16"/>
+          parent="project_sprint_root_menu" action="project_team_action"
+          sequence="20"/>
+
 </odoo>
