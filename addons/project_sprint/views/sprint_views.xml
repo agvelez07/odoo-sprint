@@ -59,13 +59,19 @@
                            readonly="state == 'closed'"/>
                     <notebook>
                         <page string="Tarefas">
-                            <field name="task_ids"
+                                                        <field name="task_ids"
                                    domain="[('project_id', '=', project_id)]"
+                                   context="{'sprint_id': id}"
                                    readonly="state == 'closed'">
-                                <list>
+                                <list delete="false">
                                     <field name="name"/>
+                                    <field name="user_ids" widget="many2many_avatar_user"/>
                                     <field name="stage_id"/>
                                     <field name="effort_points"/>
+                                    <button name="action_remove_from_sprint" type="object"
+                                            icon="fa-times" title="Remover do sprint"
+                                            confirm="Tem a certeza que quer remover esta tarefa do sprint? A tarefa não é apagada: continua no projeto."
+                                            invisible="parent.state == 'closed'"/>
                                 </list>
                             </field>
                         </page>

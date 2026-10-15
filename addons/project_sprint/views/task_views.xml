@@ -11,6 +11,8 @@
                        domain="[('project_id', '=', project_id), ('state', '!=', 'closed')]"/>
                 <field name="current_sprint_id" invisible="not project_id"/>
                 <field name="effort_points" invisible="not project_id"/>
+                <field name="team_id" invisible="not team_id"/>
+                <field name="team_members_text" invisible="not team_id"/>
             </xpath>
         </field>
     </record>
