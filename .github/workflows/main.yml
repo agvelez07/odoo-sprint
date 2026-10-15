@@ -40,6 +40,11 @@ jobs:
         run: |
           git clone --depth 1 --branch 17.0 https://github.com/odoo/odoo.git odoo_core
 
+      - name: Instalar Dependências de Sistema
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libldap2-dev libsasl2-dev
+
       - name: Instalar Dependências do Odoo
         run: |
           python -m pip install --upgrade pip
