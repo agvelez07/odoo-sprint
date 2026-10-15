@@ -1,0 +1,61 @@
+name: Odoo Sprint CI
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: odoo
+          POSTGRES_PASSWORD: odoo_password
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout do Repositório
+        uses: actions/checkout@v4
+        with:
+          path: custom_addons/odoo-sprint
+
+      - name: Configurar Ambiente Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Obter Código-Fonte do Odoo (versão 17.0)
+        run: |
+          git clone --depth 1 --branch 17.0 https://github.com/odoo/odoo.git odoo_core
+
+      - name: Instalar Dependências do Odoo
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r odoo_core/requirements.txt
+
+      - name: Executar Testes Automáticos
+        env:
+          HOST: localhost
+          PORT: 5432
+          USER: odoo
+          PASSWORD: odoo_password
+        run: |
+          python odoo_core/odoo-bin \
+            --addons-path=odoo_core/addons,custom_addons \
+            -d test_db \
+            -i odoo-sprint \
+            --test-enable \
+            --stop-after-init \
+            --log-level=test
