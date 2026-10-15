@@ -11,6 +11,7 @@ class ProjectSprint(models.Model):
     _name = 'project.sprint'
     _description = 'Project Sprint'
     _order = 'date_start desc, id desc'
+    team_id = fields.Many2one(related='project_id.team_id', store=True, index=True)
 
     name = fields.Char(required=True, default='New', copy=False)
     project_id = fields.Many2one(

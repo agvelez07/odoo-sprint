@@ -10,6 +10,7 @@
     'data': [
         'security/security.xml',
         'security/ir.model.access.csv',
+        'data/team_role_data.xml',
         'views/sprint_views.xml',
         'views/task_views.xml',
         'views/project_views.xml',

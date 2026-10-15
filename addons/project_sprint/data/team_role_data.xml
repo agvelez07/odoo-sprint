@@ -1,0 +1,17 @@
+<odoo noupdate="1">
+    <record id="role_engineer" model="project.team.role">
+        <field name="name">Engenheiro</field>
+    </record>
+    <record id="role_backend" model="project.team.role">
+        <field name="name">Backend Developer</field>
+        <field name="parent_id" ref="role_engineer"/>
+    </record>
+    <record id="role_frontend" model="project.team.role">
+        <field name="name">Front End Developer</field>
+        <field name="parent_id" ref="role_engineer"/>
+    </record>
+    <record id="role_tech_lead" model="project.team.role">
+        <field name="name">Tech Lead</field>
+        <field name="parent_id" ref="role_engineer"/>
+    </record>
+</odoo>
