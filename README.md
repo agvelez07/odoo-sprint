@@ -1,149 +1,153 @@
 # Project Sprints — Odoo 18
 
-Módulo `project_sprint` para o desafio *much. Consulting — Software Engineering Challenge*:
-sprints para as equipas de engenharia, construído em cima da app **Projeto** do Odoo 18.
+`project_sprint` module for the *much. Consulting — Software Engineering Challenge*:
+sprints for engineering teams, built on top of Odoo 18's **Project** app.
 
-## Correr o projeto
+## Running the project
 
-Precisas de Docker + Docker Compose.
+You need Docker + Docker Compose.
 
 ```bash
-cp .env.example .env     # só na primeira vez (valores de desenvolvimento)
-docker compose up -d     # cria a base de dados "sprints" e instala o módulo
+cp .env.example .env     # first time only (development values)
+docker compose up -d     # creates the "sprints" database and installs the module
 ```
 
-Abre <http://localhost:8069> e entra com o administrador. Menu **Sprints** (canto superior esquerdo).
+Open <http://localhost:8069> and log in as the administrator. Menu **Sprints** (top-left corner).
 
-### Dados de demonstração (3 equipas, 5 projetos, 9 sprints, 8 milestones, 42 tarefas, 11 utilizadores)
+### Demo data (3 teams, 5 projects, 9 sprints, 8 milestones, 42 tasks, 12 users)
 
 ```bash
 docker compose cp scripts/seed_demo.py odoo:/tmp/seed_demo.py
 docker compose exec odoo bash -c "odoo shell -d sprints --db_host=db --db_user=odoo --db_password=odoo --no-http < /tmp/seed_demo.py"
 ```
 
-(Funciona em bash, cmd e PowerShell: a redireção `<` acontece dentro do contentor.)
-O script só cria os dados se ainda não existirem, por isso pode correr-se mais do que uma vez.
+(Works in bash, cmd and PowerShell: the `<` redirection happens inside the container.)
+The script only creates the data if it does not exist yet, so it can be run more than once.
 
-### Utilizadores de demonstração
+### Demo users
 
-Todos com o domínio `@demo.local` e a palavra-passe **demo** (só para ambiente local; para usar outra,
-corre o segundo comando com `docker compose exec -e DEMO_PASSWORD=... odoo bash -c "..."`).
-Dica: abre uma janela anónima por utilizador para mostrar as diferenças de permissões lado a lado.
+All use the `@demo.local` domain and the password **demo** (local environment only; to use another one,
+run the second command as `docker compose exec -e DEMO_PASSWORD=... odoo bash -c "..."`).
+Tip: open one incognito window per user to show the permission differences side by side.
 
-| Utilizador | Papel | Equipa |
+| User | Role | Team |
 |---|---|---|
-| `ana.costa` | Líder | Backend |
-| `bruno.silva`, `carla.mendes`, `diogo.ramos` | Engenheiros | Backend |
-| `eduardo.faria` | Líder | Frontend |
-| `filipa.rocha`, `goncalo.pinto`, `helena.duarte` | Engenheiros | Frontend |
-| `ines.moreira` | Líder | DevOps e QA |
-| `joao.lopes`, `katia.nunes` | Engenheiros | DevOps e QA |
+| `gestor` | Project manager (sees and edits everything) | all |
+| `ana.costa` | Lead | Backend |
+| `bruno.silva`, `carla.mendes`, `diogo.ramos` | Engineers | Backend |
+| `eduardo.faria` | Lead | Frontend |
+| `filipa.rocha`, `goncalo.pinto`, `helena.duarte` | Engineers | Frontend |
+| `ines.moreira` | Lead | DevOps and QA |
+| `joao.lopes`, `katia.nunes` | Engineers | DevOps and QA |
 
-O utilizador administrador do Odoo é **gestor**: vê e edita tudo.
+`gestor@demo.local` shows the manager role without using Odoo's administration account.
 
-### Testes automáticos
+### Automated tests
 
 ```bash
 docker compose exec odoo odoo -d sprints_test -i project_sprint --test-enable --test-tags /project_sprint --stop-after-init --http-port=8070 --db_host=db --db_user=odoo --db_password=odoo
 docker compose exec db dropdb -U odoo sprints_test
 ```
 
-(a segunda linha apaga a base de dados de testes)
+(the second line deletes the test database)
 
-São 52 testes (sprints, permissões, notificações e milestones). Usam uma base de dados à parte,
-por isso não mexem nos dados da demo.
+There are 55 tests (sprints, permissions, notifications and milestones). They use a separate
+database, so the demo data is not touched.
 
-### Começar do zero
+### Starting from scratch
 
 ```bash
-docker compose down -v   # apaga a base de dados e os ficheiros do Odoo
+docker compose down -v   # deletes the database and Odoo's files
 docker compose up -d
 ```
 
-> Se já tinhas dados de uma versão anterior, abre cada **Equipa** e carrega em **Sincronizar seguidores**
-> (só gestores): aplica as regras de visibilidade e as notificações aos projetos, sprints e tarefas que já existiam.
+> If you already had data from an earlier version, open each **Team** and click **Sync followers**
+> (managers only): it applies the visibility rules and notifications to the projects, sprints and tasks that already existed.
 
-## O que o módulo faz
+## What the module does
 
-| Menu | Descrição |
+| Menu | Description |
 |---|---|
-| **As minhas tarefas** | As tarefas atribuídas a mim em sprints planeados ou ativos, ordenadas por prazo (`Faltam 4 d`, `Em atraso 3 d`). |
-| **Sprints** | Lista, kanban (por estado) e gráfico de pontos. O formulário mostra progresso, tarefas, milestone e botões Iniciar/Fechar. |
-| **Board** | Kanban das tarefas por etapa, de todos os sprints ativos ou de um só (botão **Board** no sprint). **Só líderes e gestores arrastam.** |
-| **Milestones** | Marcos dos projetos da equipa. Um sprint pode apontar para um milestone e avisa se acabar depois do prazo. |
-| **Equipas** | Equipas com líder, membros e funções (as funções formam uma hierarquia configurável). |
+| **My tasks** | Tasks assigned to me in planned or active sprints, sorted by deadline (`4 d left`, `3 d overdue`). |
+| **Sprints** | List, kanban (by state) and points chart. The form shows progress, tasks, milestone and Start/Close buttons. |
+| **Board** | Kanban of the tasks by stage, for all active sprints or a single one (**Board** button on the sprint). **Only leads and managers can drag.** |
+| **Milestones** | Project milestones of the team. A sprint can point to a milestone and warns if it ends after the deadline. |
+| **Teams** | Teams with a lead, members and roles (roles form a configurable hierarchy). |
 
-Regras de negócio dos sprints: um sprint ativo por projeto; as tarefas só podem estar em sprints do
-seu projeto; uma tarefa pode passar por vários sprints; ao fechar um sprint com tarefas por concluir,
-um assistente pergunta se vão para outro sprint ou voltam ao backlog; o progresso conta pontos de
-esforço (ou tarefas, se não houver pontos); tarefas canceladas não contam.
+Sprint business rules: one active sprint per project; tasks can only be in sprints of their own
+project; a task can go through several sprints; when closing a sprint with unfinished tasks, a
+wizard asks whether they move to another sprint or go back to the backlog; progress counts effort
+points (or tasks, if there are no points); cancelled tasks do not count.
 
-## Permissões
+## Permissions
 
-| | Gestor | Líder da equipa | Engenheiro |
+| | Manager | Team lead | Engineer |
 |---|---|---|---|
-| Ver projetos, tarefas, sprints, milestones e equipa | tudo | só da sua equipa | só da sua equipa |
-| Criar, iniciar, fechar e editar sprints | ✔ | da sua equipa | ✘ (só vê) |
-| **Reordenar o board** (arrastar) | ✔ | da sua equipa | ✘ (só vê) |
-| Criar e editar milestones | ✔ | da sua equipa | ✘ (só vê) |
-| Editar tarefas | todas | todas as da equipa | as que lhe estão atribuídas ou que criou |
-| Comentar tarefas | ✔ | ✔ | ✔ (inclusive nas dos colegas) |
-| Gerir membros e funções da equipa | ✔ | da sua equipa | ✘ |
-| Criar equipas | ✔ | ✘ | ✘ |
+| View projects, tasks, sprints, milestones and team | everything | own team only | own team only |
+| Create, start, close and edit sprints | ✔ | own team | ✘ (view only) |
+| **Reorder the board** (drag) | ✔ | own team | ✘ (view only) |
+| Create and edit milestones | ✔ | own team | ✘ (view only) |
+| Edit tasks | all | all of the team's | those assigned to them or created by them |
+| Comment on tasks | ✔ | ✔ | ✔ (including colleagues' tasks) |
+| Manage team members and roles | ✔ | own team | ✘ |
+| Create teams | ✔ | ✘ | ✘ |
 
-Projetos sem equipa mantêm o comportamento normal do Odoo.
+Projects without a team keep Odoo's normal behaviour.
 
-## Notificações
+## Notifications
 
-Sempre que alguém mexe em algo que pertence a uma equipa, o líder e os membros recebem um aviso
-na caixa de entrada do Odoo (ícone de mensagens), exceto quem fez a alteração:
+Whenever someone changes something that belongs to a team, the lead and the members get a notice
+in the Odoo inbox (messages icon), except the person who made the change:
 
-- **Tarefas:** mudança de etapa, responsável, prazo, pontos, sprint, projeto, etc.
-- **Sprints:** criação, início/fecho, datas, milestone, tarefas adicionadas ou removidas.
-- **Milestones:** criação e alterações (nome, prazo, atingido).
-- **Equipa:** entrada, saída e mudança de função de membros; mudança de líder.
-- **Alertas automáticos** (tarefa agendada diária): sprint que termina amanhã ou que ficou em atraso.
+- **Tasks:** change of stage, assignee, deadline, points, sprint, project, etc. (reordering the board does not notify).
+- **Sprints:** creation, start/close, dates, milestone, tasks added or removed.
+- **Milestones:** creation and changes (name, deadline, reached).
+- **Team:** members joining, leaving or changing role; change of lead.
+- **Automatic alerts** (daily scheduled action): a sprint that ends tomorrow or became overdue.
 
-Quem tiver um servidor de email de saída configurado e a preferência "Email" no seu perfil também
-recebe por email.
+Anyone with an outgoing mail server configured and the "Email" preference in their profile also
+receives them by email.
 
-## Decisões técnicas (para a defesa)
+## Technical decisions (for the defence)
 
-- **Equipas = seguidores.** A visibilidade usa o mecanismo nativo do Odoo: os projetos de uma equipa
-  ficam com privacidade "Seguidores" e a equipa é subscrita nos projetos, sprints e tarefas. Isto dá,
-  com o mesmo mecanismo, o filtro de visibilidade (regras nativas) *e* a lista de quem é notificado.
-  Os seguidores sincronizam-se sozinhos quando muda a equipa, o líder, os membros ou o projeto.
-- **Regras de acesso (`security/security.xml`).** As regras de grupo somam-se (OU) e as globais
-  restringem (E). Por isso a leitura é dada por regras de grupo (cada um vê a sua equipa) e a edição
-  de tarefas e milestones por regras globais com exceção do gestor. As permissões de escrita ficam
-  também na base de dados, não só na interface.
-- **Arrastar no board.** A vista "só leitura" tem `records_draggable="false"`; a ação do menu escolhe a
-  vista certa consoante o utilizador. Como esconder na interface não é segurança, o `write` da tarefa
-  recusa alterações de `sequence` a quem não é líder da equipa nem gestor (`_check_can_reorder`).
-- **Vistas por papel.** Uma vista que herda de outra não pode ter `groups`; por isso há vistas
-  primárias (`mode="primary"`) para a versão só leitura e a ação escolhe qual abrir.
-- **Notificações com `mail.thread`.** Em vez de criar um modelo de notificações novo, usa-se o chatter e
-  subtipos de mensagem. Por omissão o Odoo só avisa de algumas mudanças (as outras ficam em silêncio no
-  histórico); o mixin `project.team.notify.mixin` faz com que todas as alterações rastreadas avisem a equipa.
-- **Estrutura.** `deadline_mixin` (prazos, partilhado por tarefa e sprint) e `team_notify_mixin`
-  (notificações) evitam código repetido; cada modelo só diz de que equipa é (`_get_notify_team`).
+- **Teams = followers.** Visibility uses Odoo's native mechanism: a team's projects get "Followers"
+  privacy and the team is subscribed to the projects, sprints and tasks. With the same mechanism this
+  gives both the visibility filter (native rules) *and* the list of who is notified.
+  Followers sync themselves when the team, the lead, the members or the project change.
+- **Access rules (`security/security.xml`).** Group rules add up (OR) and global rules restrict (AND).
+  That is why reading is granted by group rules (everyone sees their team) and editing of tasks and
+  milestones by global rules with a manager exception. Write permissions also live in the database,
+  not only in the interface.
+- **Dragging on the board.** The read-only view has `records_draggable="false"`; the menu action picks
+  the right view for the user. Since hiding things in the UI is not security, the task `write` rejects
+  `sequence` changes from anyone who is neither the team lead nor a manager (`_check_can_reorder`).
+- **Views by role.** A view that inherits from another cannot have `groups`; so there are primary
+  views (`mode="primary"`) for the read-only version and the action chooses which one to open.
+- **Notifications with `mail.thread`.** Instead of creating a new notifications model, the chatter and
+  message subtypes are used. By default Odoo only notifies some changes (the others stay silently in
+  the history); the `project.team.notify.mixin` mixin makes every tracked change notify the team.
+- **Structure.** `deadline_mixin` (deadlines, shared by task and sprint) and `team_notify_mixin`
+  (notifications) avoid repeated code; each model only says which team it belongs to (`_get_notify_team`).
+- **Changing a record's project.** Moving a sprint or task to another project removes what belonged to
+  the old project (tasks, milestone, sprints), both in the form (onchange) and on `write`
+  (list, import, API), instead of leaving the user with a blocking error.
 
-## Estrutura
+## Structure
 
 ```
 addons/project_sprint/
-├── models/      sprint, tarefa, projeto, equipa, milestone, mixins (prazos e notificações)
-├── security/    grupos, regras de acesso (security.xml) e permissões por modelo (ir.model.access.csv)
-├── views/       sprints, board, as minhas tarefas, milestones, equipas, tarefas e projetos
-├── data/        funções, tipos de mensagem da equipa, tarefa agendada de alertas
-├── wizard/      assistente de fecho de sprint
-├── tests/       52 testes automáticos
-└── static/      estilos
-scripts/seed_demo.py   dados de demonstração
+├── models/      sprint, task, project, team, milestone, mixins (deadlines and notifications)
+├── security/    groups, access rules (security.xml) and per-model permissions (ir.model.access.csv)
+├── views/       sprints, board, my tasks, milestones, teams, tasks and projects
+├── data/        roles, team message types, scheduled alerts action
+├── wizard/      sprint closing wizard
+├── tests/       55 automated tests
+└── static/      styles
+scripts/seed_demo.py   demo data
 ```
 
-## Limitações e próximos passos
+## Limitations and next steps
 
-- Os textos do módulo estão em português e os do Odoo em inglês (sem ficheiros de tradução `.po`).
-- Não há burndown/velocity; o gráfico mostra pontos totais e concluídos por projeto.
-- Os alertas de prazo correm uma vez por dia (tarefa agendada do Odoo).
+- The module's texts are in Portuguese and Odoo's are in English (no `.po` translation files).
+- No burndown/velocity; the chart shows total and completed points per project.
+- Deadline alerts run once a day (Odoo scheduled action).

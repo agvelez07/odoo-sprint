@@ -34,6 +34,13 @@ class ProjectTask(models.Model):
                     task=task.name,
                     project=task.project_id.display_name or _('sem projeto')))
 
+    @api.onchange('project_id')
+    def _onchange_project_id_sprints(self):
+        """Ao mudar de projeto, a tarefa sai dos sprints do projeto antigo."""
+        for task in self:
+            task.sprint_ids = task.sprint_ids.filtered(
+                lambda s: s.project_id == task.project_id)
+
     @api.depends('project_id.team_id.lead_id',
                  'project_id.team_id.member_ids.user_id',
                  'project_id.team_id.member_ids.role_id')
@@ -104,6 +111,13 @@ class ProjectTask(models.Model):
     def write(self, vals):
         if 'sequence' in vals:
             self._check_can_reorder()
+        if 'project_id' in vals and 'sprint_ids' not in vals:
+            # mudar o projeto (por qualquer via) tira a tarefa dos sprints do projeto antigo
+            for task in self:
+                stale = task.sprint_ids.filtered(lambda s: s.project_id.id != vals['project_id'])
+                if stale:
+                    super(ProjectTask, task).write(
+                        {'sprint_ids': [Command.unlink(s.id) for s in stale]})
         res = super().write(vals)
         if 'project_id' in vals:
             self._subscribe_team()
