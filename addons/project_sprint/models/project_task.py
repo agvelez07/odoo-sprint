@@ -1,9 +1,10 @@
 from odoo import _, Command, api, fields, models
-from odoo.exceptions import ValidationError, UserError
+from odoo.exceptions import AccessError, ValidationError, UserError
 
 
 class ProjectTask(models.Model):
-    _inherit = ['project.task', 'project.deadline.mixin']
+    _name = 'project.task'
+    _inherit = ['project.task', 'project.deadline.mixin', 'project.team.notify.mixin']
 
     sprint_ids = fields.Many2many(
         'project.sprint', 'project_sprint_task_rel', 'task_id', 'sprint_id',
@@ -72,13 +73,13 @@ class ProjectTask(models.Model):
 
     # ------------------------------------------------------------------
     # Notificações: a equipa segue as tarefas dos seus projetos
+    # (ver project.team.notify.mixin)
     # ------------------------------------------------------------------
-    def _subscribe_team(self):
-        for task in self:
-            team = task.project_id.team_id
-            if team:
-                partners = (team.lead_id | team.member_ids.user_id).partner_id
-                task.sudo().message_subscribe(partner_ids=partners.ids)
+    def _get_notify_team(self):
+        return self.project_id.team_id
+
+    def _track_subtype(self, init_values):
+        return self._team_track_subtype(super()._track_subtype(init_values))
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -86,7 +87,23 @@ class ProjectTask(models.Model):
         tasks._subscribe_team()
         return tasks
 
+    # ------------------------------------------------------------------
+    # Permissões: só o líder da equipa (ou um gestor) reordena as tarefas.
+    # Quem pode editar cada tarefa está em security/security.xml.
+    # ------------------------------------------------------------------
+    def _check_can_reorder(self):
+        user = self.env.user
+        if self.env.su or user.has_group('project.group_project_manager'):
+            return
+        for task in self.sudo():
+            team = task.project_id.team_id
+            if team and team.lead_id != user:
+                raise AccessError(_(
+                    'Só o líder da equipa ou um gestor pode reordenar as tarefas.'))
+
     def write(self, vals):
+        if 'sequence' in vals:
+            self._check_can_reorder()
         res = super().write(vals)
         if 'project_id' in vals:
             self._subscribe_team()

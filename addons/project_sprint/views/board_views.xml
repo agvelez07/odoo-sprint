@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Board: tarefas dos sprints por etapa.
+         Esta é a versão só de leitura. Líderes e gestores recebem a versão
+         "_manage" (ver Sprint.action_open_board), onde se pode arrastar para
+         mudar de etapa e reordenar. No servidor, só o líder da equipa ou um
+         gestor consegue gravar a ordem (Task._check_can_reorder). -->
+    <record id="project_sprint_board_view_kanban" model="ir.ui.view">
+        <field name="name">project.sprint.board.kanban</field>
+        <field name="model">project.task</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="stage_id" default_order="sequence, id"
+                    records_draggable="false" group_create="false" group_edit="false"
+                    group_delete="false" quick_create="false" create="false"
+                    class="o_kanban_small_column o_sprint_board">
+                <field name="state"/>
+                <field name="days_overdue"/>
+                <field name="effort_points"/>
+                <progressbar field="state" sum_field="effort_points"
+                             colors='{"1_done": "success-done", "1_canceled": "danger", "03_approved": "success", "02_changes_requested": "warning", "04_waiting_normal": "info", "01_in_progress": "200"}'/>
+                <templates>
+                    <t t-name="card">
+                        <main t-att-class="['1_done', '1_canceled'].includes(record.state.raw_value) ? 'opacity-50' : ''">
+                            <field name="name" class="fw-bold fs-5"/>
+                            <div class="text-muted d-flex flex-column">
+                                <field name="project_id" options="{'no_open': True}"
+                                       invisible="context.get('sprint_board')"/>
+                                <field name="current_sprint_id" options="{'no_open': True}"
+                                       invisible="context.get('sprint_board')"/>
+                            </div>
+                            <div class="d-flex align-items-center gap-2 mt-2">
+                                <span t-if="record.effort_points.raw_value"
+                                      class="badge text-bg-light border">
+                                    <field name="effort_points"/> pts
+                                </span>
+                                <span t-attf-class="badge #{record.days_overdue.raw_value &gt; 0 ? 'text-bg-danger' : 'text-bg-light border'}">
+                                    <field name="deadline_status"/>
+                                </span>
+                            </div>
+                            <footer class="pt-2">
+                                <field name="user_ids" widget="many2many_avatar_user" class="ms-auto"/>
+                            </footer>
+                        </main>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="project_sprint_board_view_kanban_manage" model="ir.ui.view">
+        <field name="name">project.sprint.board.kanban.manage</field>
+        <field name="model">project.task</field>
+        <field name="mode">primary</field>
+        <field name="inherit_id" ref="project_sprint_board_view_kanban"/>
+        <field name="arch" type="xml">
+            <xpath expr="//kanban" position="attributes">
+                <attribute name="records_draggable">true</attribute>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="project_sprint_board_view_search" model="ir.ui.view">
+        <field name="name">project.sprint.board.search</field>
+        <field name="model">project.task</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="user_ids"/>
+                <field name="project_id"/>
+                <field name="sprint_ids"/>
+                <filter name="my_tasks" string="As minhas tarefas"
+                        domain="[('user_ids', 'in', uid)]"/>
+                <filter name="open" string="Por concluir"
+                        domain="[('state', 'not in', ['1_done', '1_canceled'])]"/>
+                <filter name="overdue" string="Em atraso"
+                        domain="[('date_deadline', '&lt;', context_today().strftime('%Y-%m-%d')), ('state', 'not in', ['1_done', '1_canceled'])]"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="project_sprint_board_action" model="ir.actions.act_window">
+        <field name="name">Board</field>
+        <field name="res_model">project.task</field>
+        <field name="view_mode">kanban,form</field>
+        <field name="view_id" ref="project_sprint_board_view_kanban"/>
+        <field name="search_view_id" ref="project_sprint_board_view_search"/>
+        <field name="domain">[('current_sprint_id', '!=', False)]</field>
+    </record>
+
+    <!-- O menu passa por uma ação de servidor para escolher a versão certa do board -->
+    <record id="project_sprint_board_server_action" model="ir.actions.server">
+        <field name="name">Board</field>
+        <field name="model_id" ref="model_project_sprint"/>
+        <field name="groups_id" eval="[(4, ref('project.group_project_user'))]"/>
+        <field name="state">code</field>
+        <field name="code">action = model.action_open_board()</field>
+    </record>
+
+    <menuitem id="project_sprint_board_menu" name="Board"
+              parent="project_sprint_root_menu"
+              action="project_sprint_board_server_action" sequence="12"/>
+</odoo>

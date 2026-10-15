@@ -9,34 +9,50 @@ CLOSED_STATES = ('1_done', '1_canceled')
 
 class ProjectSprint(models.Model):
     _name = 'project.sprint'
-    _inherit = ['project.deadline.mixin']
+    _inherit = ['project.deadline.mixin', 'project.team.notify.mixin', 'mail.thread']
     _description = 'Project Sprint'
     _order = 'project_id, date_end'
 
-    name = fields.Char(required=True, default='New', copy=False)
+    name = fields.Char(
+        string='Nome', required=True, default='New', copy=False, tracking=True)
     project_id = fields.Many2one(
-        'project.project', required=True, index=True, ondelete='restrict')
-    team_id = fields.Many2one(related='project_id.team_id', store=True, index=True)
+        'project.project', string='Projeto', required=True, index=True,
+        ondelete='restrict', tracking=True)
+    team_id = fields.Many2one(
+        related='project_id.team_id', string='Equipa', store=True, index=True)
     date_start = fields.Date(
-        required=True, default=fields.Date.context_today)
+        string='Início', required=True, default=fields.Date.context_today,
+        tracking=True)
     date_end = fields.Date(
-        required=True,
+        string='Fim', required=True, tracking=True,
         default=lambda self: fields.Date.context_today(self) + timedelta(days=14))
-    goal = fields.Text()
+    goal = fields.Text(string='Objetivo')
     state = fields.Selection(
         [('planned', 'Planeado'), ('active', 'Ativo'), ('closed', 'Fechado')],
-        default='planned', required=True, index=True, copy=False)
+        string='Estado', default='planned', required=True, index=True, copy=False,
+        tracking=True)
     active = fields.Boolean(default=True)
     task_ids = fields.Many2many(
         'project.task', 'project_sprint_task_rel', 'sprint_id', 'task_id',
         string='Tarefas')
+    milestone_id = fields.Many2one(
+        'project.milestone', string='Milestone', index=True, ondelete='set null',
+        domain="[('project_id', '=', project_id)]", tracking=True)
+    milestone_deadline = fields.Date(
+        related='milestone_id.deadline', string='Prazo do milestone')
+    milestone_at_risk = fields.Boolean(
+        compute='_compute_milestone_at_risk', string='Milestone em risco')
 
     # Progresso (guardado para poder agrupar/ordenar sem recalcular)
-    task_count = fields.Integer(compute='_compute_progress', store=True)
-    total_points = fields.Integer(compute='_compute_progress', store=True)
-    done_points = fields.Integer(compute='_compute_progress', store=True)
-    progress = fields.Float(compute='_compute_progress', store=True)
-    is_overdue = fields.Boolean(compute='_compute_is_overdue')
+    task_count = fields.Integer(
+        string='N.º de tarefas', compute='_compute_progress', store=True)
+    total_points = fields.Integer(
+        string='Pontos totais', compute='_compute_progress', store=True)
+    done_points = fields.Integer(
+        string='Pontos concluídos', compute='_compute_progress', store=True)
+    progress = fields.Float(
+        string='Progresso', compute='_compute_progress', store=True)
+    is_overdue = fields.Boolean(string='Em atraso', compute='_compute_is_overdue')
 
     # days_overdue e deadline_status vêm do project.deadline.mixin
 
@@ -67,6 +83,16 @@ class ProjectSprint(models.Model):
             sprint.is_overdue = bool(
                 sprint.state == 'active' and sprint.date_end and sprint.date_end < today)
 
+    @api.depends('state', 'date_end', 'milestone_id.deadline', 'milestone_id.is_reached')
+    def _compute_milestone_at_risk(self):
+        """O sprint acaba depois do prazo do milestone a que está ligado."""
+        for sprint in self:
+            milestone = sprint.milestone_id
+            sprint.milestone_at_risk = bool(
+                milestone and milestone.deadline and not milestone.is_reached
+                and sprint.state != 'closed' and sprint.date_end
+                and sprint.date_end > milestone.deadline)
+
     @api.depends('state', 'date_start', 'date_end')
     def _compute_deadline(self):
         super()._compute_deadline()
@@ -82,6 +108,15 @@ class ProjectSprint(models.Model):
         if not self.date_end:
             return None, 'Sem prazo'
         return self.date_end, False
+
+    # ------------------------------------------------------------------
+    # Notificações (ver project.team.notify.mixin)
+    # ------------------------------------------------------------------
+    def _get_notify_team(self):
+        return self.team_id
+
+    def _track_subtype(self, init_values):
+        return self._team_track_subtype(super()._track_subtype(init_values))
 
     # ------------------------------------------------------------------
     # Validacoes
@@ -117,6 +152,15 @@ class ProjectSprint(models.Model):
                     tasks=', '.join(wrong.mapped('name')),
                     project=sprint.project_id.display_name))
 
+    @api.constrains('milestone_id', 'project_id')
+    def _check_milestone_same_project(self):
+        for sprint in self.filtered('milestone_id'):
+            if sprint.milestone_id.project_id != sprint.project_id:
+                raise ValidationError(_(
+                    'O milestone "%(milestone)s" não pertence ao projeto "%(project)s".',
+                    milestone=sprint.milestone_id.name,
+                    project=sprint.project_id.display_name))
+
     @api.ondelete(at_uninstall=False)
     def _unlink_except_with_tasks(self):
         if self.filtered('task_ids'):
@@ -133,7 +177,31 @@ class ProjectSprint(models.Model):
                 count = self.with_context(active_test=False).search_count(
                     [('project_id', '=', vals['project_id'])])
                 vals['name'] = _('Sprint %s', count + 1)
-        return super().create(vals_list)
+        sprints = super().create(vals_list)
+        sprints._subscribe_team()
+        for sprint in sprints:
+            sprint._notify_team(_(
+                'Novo sprint "%(name)s" em %(project)s (%(start)s a %(end)s).',
+                name=sprint.name, project=sprint.project_id.display_name,
+                start=sprint.date_start, end=sprint.date_end))
+        return sprints
+
+    def write(self, vals):
+        tasks_before = {s.id: s.task_ids for s in self} if 'task_ids' in vals else {}
+        res = super().write(vals)
+        if 'project_id' in vals:
+            self._subscribe_team()
+        for sprint in self.filtered(lambda s: s.id in tasks_before):
+            added = sprint.task_ids - tasks_before[sprint.id]
+            removed = tasks_before[sprint.id] - sprint.task_ids
+            parts = []
+            if added:
+                parts.append(_('Tarefas adicionadas: %s.', ', '.join(added.mapped('name'))))
+            if removed:
+                parts.append(_('Tarefas removidas: %s.', ', '.join(removed.mapped('name'))))
+            if parts:
+                sprint._notify_team(' '.join(parts))
+        return res
 
     # ------------------------------------------------------------------
     # Acoes
@@ -162,3 +230,36 @@ class ProjectSprint(models.Model):
             'target': 'new',
             'context': {'default_sprint_id': self.id},
         }
+
+    def action_open_board(self):
+        """Board (kanban) das tarefas: de um sprint (botão) ou de todos os
+        sprints ativos (menu). Só líderes e gestores recebem a versão em que
+        se pode arrastar; os outros veem o mesmo board só para leitura."""
+        manage = self.env['project.team']._user_can_manage()
+        view = self.env.ref('project_sprint.project_sprint_board_view_kanban' + (
+            '_manage' if manage else ''))
+        action = self.env['ir.actions.act_window']._for_xml_id(
+            'project_sprint.project_sprint_board_action')
+        action['views'] = [(view.id, 'kanban'), (False, 'form')]
+        if self:
+            self.ensure_one()
+            action['name'] = _('Board — %(sprint)s (%(project)s)',
+                               sprint=self.name, project=self.project_id.display_name)
+            action['domain'] = [('sprint_ids', 'in', self.ids)]
+            action['context'] = {'sprint_board': True}
+        return action
+
+    # ------------------------------------------------------------------
+    # Alertas automáticos (ver data/cron_data.xml)
+    # ------------------------------------------------------------------
+    @api.model
+    def _cron_deadline_alerts(self):
+        """Avisa a equipa quando um sprint ativo termina amanhã ou ficou em atraso."""
+        today = fields.Date.context_today(self)
+        messages = {
+            today + timedelta(days=1): _('Este sprint termina amanhã.'),
+            today - timedelta(days=1): _('Este sprint passou o prazo e continua ativo.'),
+        }
+        sprints = self.search([('state', '=', 'active'), ('date_end', 'in', list(messages))])
+        for sprint in sprints:
+            sprint._notify_team(messages[sprint.date_end])

@@ -1,11 +1,22 @@
 <odoo>
+    <!-- Níveis de acesso
+         Gestor (project.group_project_manager) ........ vê e edita tudo
+         Líder de equipa (group_team_lead) ............. gere a sua equipa
+         Engenheiro (project.group_project_user) ....... vê a sua equipa e
+                                                          edita as suas tarefas -->
+
     <record id="group_team_lead" model="res.groups">
         <field name="name">Líder de equipa</field>
         <field name="category_id" ref="base.module_category_services_project"/>
         <field name="implied_ids" eval="[(4, ref('project.group_project_user'))]"/>
     </record>
 
-    <!-- Gestor: acesso total -->
+    <!-- Os milestones ficam ligados para todos os utilizadores de projeto -->
+    <record id="project.group_project_user" model="res.groups">
+        <field name="implied_ids" eval="[(4, ref('project.group_project_milestone'))]"/>
+    </record>
+
+    <!-- ============ Gestor: acesso total ============ -->
     <record id="rule_team_manager" model="ir.rule">
         <field name="name">Equipa: gestor vê e edita tudo</field>
         <field name="model_id" ref="model_project_team"/>
@@ -25,7 +36,7 @@
         <field name="domain_force">[(1, '=', 1)]</field>
     </record>
 
-    <!-- Líder: só a sua equipa -->
+    <!-- ============ Líder: gere só a sua equipa ============ -->
     <record id="rule_team_lead" model="ir.rule">
         <field name="name">Equipa: líder edita a sua equipa</field>
         <field name="model_id" ref="model_project_team"/>
@@ -48,5 +59,64 @@
         <field name="groups" eval="[(4, ref('group_team_lead'))]"/>
         <field name="domain_force">[('project_id.team_id.lead_id', '=', user.id)]</field>
         <field name="perm_read" eval="False"/>
+    </record>
+
+    <!-- ============ Engenheiro: só vê a sua equipa ============ -->
+    <record id="rule_team_user" model="ir.rule">
+        <field name="name">Equipa: cada utilizador vê só a sua equipa</field>
+        <field name="model_id" ref="model_project_team"/>
+        <field name="groups" eval="[(4, ref('project.group_project_user'))]"/>
+        <field name="domain_force">['|', ('lead_id', '=', user.id), ('member_ids.user_id', '=', user.id)]</field>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+    <record id="rule_member_user" model="ir.rule">
+        <field name="name">Membro: cada utilizador vê só a sua equipa</field>
+        <field name="model_id" ref="model_project_team_member"/>
+        <field name="groups" eval="[(4, ref('project.group_project_user'))]"/>
+        <field name="domain_force">['|', ('team_id.lead_id', '=', user.id), ('team_id.member_ids.user_id', '=', user.id)]</field>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+    <record id="rule_sprint_user" model="ir.rule">
+        <field name="name">Sprint: cada utilizador vê só os da sua equipa</field>
+        <field name="model_id" ref="model_project_sprint"/>
+        <field name="groups" eval="[(4, ref('project.group_project_user'))]"/>
+        <field name="domain_force">['|', ('team_id.lead_id', '=', user.id), ('team_id.member_ids.user_id', '=', user.id)]</field>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <!-- ============ Regras globais (aplicam-se a todos, com exceção do gestor) ============ -->
+    <!-- Tarefas de projetos com equipa: edita quem é responsável, quem as criou
+         ou o líder da equipa. Os gestores editam tudo. -->
+    <record id="rule_task_edit" model="ir.rule">
+        <field name="name">Tarefa: só edita o responsável, o criador ou o líder da equipa</field>
+        <field name="model_id" ref="project.model_project_task"/>
+        <field name="perm_read" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="domain_force">(
+            [(1, '=', 1)] if user.has_group('project.group_project_manager') else
+            ['|', '|', '|', '|',
+             ('project_id', '=', False),
+             ('project_id.team_id', '=', False),
+             ('user_ids', 'in', [user.id]),
+             ('create_uid', '=', user.id),
+             ('project_id.team_id.lead_id', '=', user.id)]
+        )</field>
+    </record>
+
+    <!-- Milestones de projetos com equipa: edita o líder da equipa (ou um gestor) -->
+    <record id="rule_milestone_edit" model="ir.rule">
+        <field name="name">Milestone: só o líder da equipa ou um gestor editam</field>
+        <field name="model_id" ref="project.model_project_milestone"/>
+        <field name="perm_read" eval="False"/>
+        <field name="domain_force">(
+            [(1, '=', 1)] if user.has_group('project.group_project_manager') else
+            ['|', ('project_id.team_id', '=', False), ('project_id.team_id.lead_id', '=', user.id)]
+        )</field>
     </record>
 </odoo>
