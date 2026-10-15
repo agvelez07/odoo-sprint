@@ -34,7 +34,7 @@ jobs:
       - name: Configurar Ambiente Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.11'
 
       - name: Obter Código-Fonte do Odoo (versão 17.0)
         run: |
